@@ -1,0 +1,57 @@
+.idea
+venv
+/venv
+/newvenv
+myvenv
+
+
+### OSX ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+### Django ###
+*.log
+*.pot
+*.pyc
+local_settings.py
+shopifyapp/.env
+db.sqlite3
+
+
+__pycache__/
+*/*/*/*/__pycache__/
+*/*/*/__pycache__/
+*/*/__pycache__/
+*/__pycache__/
+
+### files ###
+*.csv
+*.json
+*.jsonl
+
+
+
+# Python-specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE-specific files
+.idea/
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+# environment 
+.env
