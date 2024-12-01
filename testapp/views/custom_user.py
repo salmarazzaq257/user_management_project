@@ -1,33 +1,90 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser
 from rest_framework import status
 from testapp.models.custom_user import CustomUser
+from testapp.models.role_management import RoleManagement
 from testapp.serializers.user_serializers import CustomUserSerializer
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
-from django.utils import timezone
-from django.core.mail import send_mail
-from django.conf import settings
-import uuid
+from django.contrib.auth.hashers import make_password
+from drf_yasg.utils import swagger_auto_schema
+import logging
+from drf_yasg import openapi
+from django.shortcuts import get_object_or_404
 
+logger = logging.getLogger(__name__)
+
+# Helper method to fetch user or return not found response
+def get_user_or_404(user_id):
+    return get_object_or_404(CustomUser, id=user_id)
 
 class CreateUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
+    @swagger_auto_schema(request_body=CustomUserSerializer)
     def post(self, request, *args, **kwargs):
+        # Pass the data to the serializer
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            # Ensure role exists if provided
+            role = request.data.get("role")
+            if role:
+                role_instance = RoleManagement.objects.filter(id=role).first()
+                if not role_instance:
+                    return Response({"detail": "Role not found."}, status=status.HTTP_400_BAD_REQUEST)
+                serializer.validated_data["role"] = role_instance
+
+            # Hash password before saving
+            password = request.data.get("password")
+            if password:
+                serializer.validated_data["password"] = make_password(password)
+
+            # Save the user
+            user = serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # Return error if serializer is invalid
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UpdateUserView(APIView):
-    permission_classes = [IsAuthenticated]
+class ListUsersView(APIView):
+    permission_classes = [IsAdminUser]
 
+    @swagger_auto_schema(
+        operation_description="Retrieve a list of users.",
+        manual_parameters=[
+            openapi.Parameter('search', openapi.IN_QUERY, description="Search by email or username", type=openapi.TYPE_STRING),
+            openapi.Parameter('is_active', openapi.IN_QUERY, description="Filter by active status (true/false)", type=openapi.TYPE_BOOLEAN),
+            openapi.Parameter('role', openapi.IN_QUERY, description="Filter by role ID", type=openapi.TYPE_INTEGER)
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        search_query = request.query_params.get("search", None)
+        is_active = request.query_params.get("is_active", None)
+        role = request.query_params.get("role", None)
+
+        # Base queryset
+        queryset = CustomUser.objects.all()
+
+        # Apply filters
+        if search_query:
+            queryset = queryset.filter(email__icontains=search_query) | queryset.filter(username__icontains=search_query)
+        if is_active is not None:
+            is_active = is_active.lower() == 'true'
+            queryset = queryset.filter(is_active=is_active)
+        if role:
+            queryset = queryset.filter(role_id=role)
+
+        # Serialize data
+        serializer = CustomUserSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UpdateUserView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @swagger_auto_schema(request_body=CustomUserSerializer)
     def put(self, request, id, *args, **kwargs):
-        user = CustomUser.objects.get(id=id)
+        user = get_user_or_404(id)
         serializer = CustomUserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -35,68 +92,33 @@ class UpdateUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ActivateDeactivateUserView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, id, *args, **kwargs):
+        user = get_user_or_404(id)
+        action = request.data.get("action")
+
+        if action not in ["activate", "deactivate"]:
+            return Response(
+                {"detail": "Invalid action. Use 'activate' or 'deactivate'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update user activation status
+        user.is_active = (action == "activate")
+        user.save()
+
+        # Log action
+        status_message = "activated" if user.is_active else "deactivated"
+        logger.info(f"User {user.email} has been {status_message} by admin.")
+        return Response({"detail": f"User successfully {status_message}."}, status=status.HTTP_200_OK)
+
+
 class DeleteUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
     def delete(self, request, id, *args, **kwargs):
-        user = CustomUser.objects.get(id=id)
+        user = get_user_or_404(id)
         user.soft_delete()  # Using the soft delete method
         return Response({"detail": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-
-class UserLoginView(APIView):
-
-  class UserLoginView(APIView):
-    def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        user = authenticate(email=email, password=password)
-        
-        if user is not None:
-            if user.deleted_at is not None:
-                return Response({"error": "This user has been deleted."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if not user.is_active:
-                return Response({"error": "This user is inactive."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            token, created = Token.objects.get_or_create(user=user)
-            user.login_count += 1
-            user.current_login_at = timezone.now()
-            user.current_login_ip = request.META.get('REMOTE_ADDR')
-            user.save()
-            
-            return Response({
-                "token": token.key,
-                "user": CustomUserSerializer(user).data
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Invalid email or password."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ResetPasswordView(APIView):
-    def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User with this email does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Generate a unique token
-        reset_token = str(uuid.uuid4())
-        user.reset_password_token = reset_token
-        user.reset_password_sent_at = timezone.now()
-        user.save()
-        
-        # Send email with the reset token
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        send_mail(
-            'Password Reset Request',
-            f'Click the link below to reset your password:\n{reset_url}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
-        
-        return Response({"message": "Password reset link has been sent to your email."}, status=status.HTTP_200_OK)

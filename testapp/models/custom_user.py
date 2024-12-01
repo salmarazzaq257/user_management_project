@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import datetime
+from django.utils.timezone import now
 from django.contrib.auth.models import UserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -38,8 +39,13 @@ class CustomUser(AbstractUser):
 
 
     def soft_delete(self):
-        self.deleted_at = True
+        self.deleted_at = now()  # Set the current timestamp
+        self.is_deleted = True   # Mark as deleted
         self.save()
+    def __str__(self):
+        return self.email
+    
+    
     
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
