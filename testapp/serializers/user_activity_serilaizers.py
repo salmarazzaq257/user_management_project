@@ -5,4 +5,4 @@ from testapp.models.user_activity import UserActivity
 class UserActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserActivity
-        fields = ['id', 'full_name', 'email', 'action_performed', 'action_type', 'timestamp', 'role_name', 'ip_address', 'user']
+        fields = ['id', 'full_name', 'email',  'action_type', 'timestamp', 'role_name', 'ip_address', 'user']

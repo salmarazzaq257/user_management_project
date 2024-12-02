@@ -89,36 +89,33 @@ class UpdateUserView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ActivationView(APIView):
 
-
-class ActivateDeactivateUserView(APIView):
     permission_classes = [IsAdminUser]
 
     def patch(self, request, id, *args, **kwargs):
-        user = get_user_or_404(id)
-        action = request.data.get("action")
+        """
+        Toggle the activation status of the user identified by the ID.
+        """
+        try:
+            # Retrieve the user
+            user = CustomUser.objects.get(id=id)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if action not in ["activate", "deactivate"]:
-            return Response(
-                {"detail": "Invalid action. Use 'activate' or 'deactivate'."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Update user activation status
-        user.is_active = (action == "activate")
+        # Toggle the `is_active` status
+        user.is_active = not user.is_active
         user.save()
 
-        # Log action
         status_message = "activated" if user.is_active else "deactivated"
         logger.info(f"User {user.email} has been {status_message} by admin.")
         return Response({"detail": f"User successfully {status_message}."}, status=status.HTTP_200_OK)
-
-
 class DeleteUserView(APIView):
     permission_classes = [IsAdminUser]
 
     def delete(self, request, id, *args, **kwargs):
-        user = get_user_or_404(id)
+        user = CustomUser.objects.get(id=id)
         user.soft_delete()  # Using the soft delete method
         return Response({"detail": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+       

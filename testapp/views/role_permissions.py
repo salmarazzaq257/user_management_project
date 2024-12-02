@@ -9,7 +9,6 @@ from drf_yasg.utils import swagger_auto_schema
 class RolePermissionsView(APIView):
     permission_classes = [IsAdminUser]
 
-
     @swagger_auto_schema(request_body=RolePermissionSerializer)
     def post(self, request, *args, **kwargs):
         serializer = RolePermissionSerializer(data=request.data)

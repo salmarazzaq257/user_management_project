@@ -30,13 +30,13 @@ SECRET_KEY = 'django-insecure-um=#tb_vsa1k0#-m)9!lo)@b@-z0z8cftq#(7i_%%orb!r38_8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-     'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -52,7 +52,7 @@ AUTH_USER_MODEL = 'testapp.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'testapp.views.auth.EmailBackend',  # Correct path
+    
 ]
 
 
@@ -189,8 +189,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static"), "templates"]
-print("Base dir", BASE_DIR)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
