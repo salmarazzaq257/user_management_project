@@ -5,7 +5,10 @@ from testapp.views.custom_user import CustomUser  # Assuming you are using a cus
 class AuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
-    remember_me = serializers.BooleanField(required=False, default=False)  # Optional "Remember Me" field
+    remember_me = serializers.BooleanField(required=False, default=False) 
+    reset_password_token = serializers.CharField(required=False)  # Optional "Reset Password" field
+    remember_created_at = serializers.DateTimeField(required=False)
+     # Optional "Remember Me" field
 
     def validate(self, data):
         email = data.get('email')

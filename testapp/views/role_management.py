@@ -9,12 +9,8 @@ from utils.custom_pagination import CustomPagination
 
 class RolePagination(CustomPagination):
     pagination_class = CustomPagination
-    
-
 
 class RoleManagementiew(APIView):
-
-    
     permission_classes = [IsAdminUser]
 
     @swagger_auto_schema(request_body=RoleManagementSerializer)

@@ -6,4 +6,4 @@ class CustomUserSerializer(serializers.ModelSerializer):
     role = RoleManagementSerializer(read_only=True)
     class Meta:
         model = CustomUser
-        fields = ['username', 'email','password','role']
+        fields = ['id','username', 'email','password','is_confirmed','role']

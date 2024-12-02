@@ -10,9 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime
 
 class LogActivityView(APIView):
-    """
-    Handles user activity logging and retrieval.
-    """
+   
     permission_classes = [permissions.IsAdminUser]
 
     @swagger_auto_schema(
@@ -77,10 +75,6 @@ class LogActivityView(APIView):
         """
         Export user activity logs as a CSV file with optional filters.
         """
-        # The permission check is handled by the IsAdminUser permission class
-        # so there's no need to manually check request.user.is_staff here.
-
-        # Create CSV response
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="user_activity_logs.csv"'
 
@@ -118,12 +112,11 @@ class LogActivityView(APIView):
                 activity.id,
                 activity.full_name,
                 activity.email,
-                activity.action_performed,
                 activity.action_type,
                 activity.timestamp,
                 activity.role_name,
                 activity.ip_address,
-                activity.user_id
+                activity.user
             ])
 
         return response

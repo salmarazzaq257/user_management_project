@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from datetime import datetime
 from django.utils.timezone import now
+from datetime import timedelta
 from django.contrib.auth.models import UserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -10,8 +10,6 @@ from django.conf import settings
 from testapp.models.role_management import RoleManagement
 
 # Create your models here.
-
-    
 
 class CustomUser(AbstractUser):
     role = models.ForeignKey(RoleManagement, related_name="management_user", on_delete=models.CASCADE)
@@ -35,7 +33,7 @@ class CustomUser(AbstractUser):
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username']
 
 
     def soft_delete(self):
@@ -45,18 +43,16 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
     
+    def is_token_expired(self):
+        if not self.reset_password_sent_at:
+            return True  # Treat as expired if the timestamp is missing
+        return now() - self.reset_password_sent_at > timedelta(hours=1)
+    
     
     
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
-
-
-
-
-    
-# raising conflict:SystemCheckError: System check identified some issues:due to the custome user and auth.user so need to add group and permission
-
 
 
