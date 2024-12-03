@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from rest_framework import permissions
 from testapp.views.auth import UserLoginView, ResetPasswordWithTokenView,GenerateResetTokenView
 
@@ -18,21 +16,6 @@ from testapp.views.role_management import RoleManagementiew, UpdateRoleView, Lis
 from testapp.views.user_activity import LogActivityView
 from testapp.views.role_permissions import RolePermissionsView
 
-
-# Swagger Schema Configuration
-schema_view = get_schema_view(
-    openapi.Info(
-        title="User Management API",
-        default_version="v1",
-        description="API documentation for the User Management project.",
-        terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="support@usermanagement.local"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=[permissions.IsAuthenticatedOrReadOnly],
-
-)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -59,9 +42,6 @@ urlpatterns = [
     # DRF URLs
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),  # Include DRF URLs
     
-    # Swagger Documentation
-    path('swagger.<str:format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+   
 ]
 

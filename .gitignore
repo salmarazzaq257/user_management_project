@@ -23,7 +23,7 @@ __pycache__/
 *.pot
 *.pyc
 local_settings.py
-shopifyapp/.env
+.env
 db.sqlite3
 
 
