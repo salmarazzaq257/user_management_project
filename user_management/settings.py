@@ -119,19 +119,6 @@ DATABASES = {
 
 
 
-SWAGGER_SETTINGS = {
-  'SECURITY_DEFINITIONS': {
-         'DRF Token': {
-               'type': 'apiKey',
-               'name': 'Authorization',
-               'in': 'header'
-         }
-      },
-    'LOGIN_URL': 'rest_framework:login',
-    'LOGOUT_URL': 'rest_framework:logout'
-}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 

@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate,  hashers
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -30,7 +30,7 @@ class UserLoginView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(request_body=AuthSerializer)
+   
     def post(self, request, *args, **kwargs):
         serializer = AuthSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -77,7 +77,7 @@ class UserLoginView(APIView):
 class GenerateResetTokenView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(request_body=AuthSerializer)
+   
 
   
     def post(self, request, *args, **kwargs):
@@ -92,7 +92,6 @@ class GenerateResetTokenView(APIView):
 
 class ResetPasswordWithTokenView(APIView):
 
-    @swagger_auto_schema(request_body=AuthSerializer)
     def post(self, request, *args, **kwargs):
         token = request.data.get("token")
         new_password = request.data.get("new_password")

@@ -1,0 +1,21 @@
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000  # Adjust the number of workers as needed
+    volumes:
+      - .:/project
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=user_management.settings
+      # Add any other environment variables needed for your Django project
+  
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"

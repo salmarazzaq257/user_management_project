@@ -6,18 +6,14 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework import status, permissions
 from testapp.models.user_activity import UserActivity
 from testapp.serializers.user_activity_serilaizers import UserActivitySerializer
-from drf_yasg.utils import swagger_auto_schema
+
 from datetime import datetime
 
 class LogActivityView(APIView):
    
     permission_classes = [permissions.IsAdminUser]
 
-    @swagger_auto_schema(
-        request_body=UserActivitySerializer,
-        operation_description="Log a user activity.",
-        responses={201: UserActivitySerializer, 400: "Validation Error"},
-    )
+    
     def post(self, request, *args, **kwargs):
         """
         Log a user activity.
@@ -29,9 +25,7 @@ class LogActivityView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
 
-    @swagger_auto_schema(
-        operation_description="Retrieve a list of user activity logs."
-    )
+    
     def get(self, request, *args, **kwargs):
         """
         Retrieve user activity logs with optional filters for date range, user, role, and action type.
@@ -68,9 +62,7 @@ class LogActivityView(APIView):
         serializer = UserActivitySerializer(user_activity, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        operation_description="Export user activity logs as CSV. Only available to admins."
-    )
+    
     def export_csv(self, request, *args, **kwargs):
         """
         Export user activity logs as a CSV file with optional filters.

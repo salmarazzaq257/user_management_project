@@ -6,9 +6,7 @@ from testapp.models.custom_user import CustomUser
 from testapp.models.role_management import RoleManagement
 from testapp.serializers.user_serializers import CustomUserSerializer
 from django.contrib.auth.hashers import make_password
-from drf_yasg.utils import swagger_auto_schema
 import logging
-from drf_yasg import openapi
 from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
@@ -19,8 +17,6 @@ def get_user_or_404(user_id):
 
 class CreateUserView(APIView):
     permission_classes = [IsAdminUser]
-
-    @swagger_auto_schema(request_body=CustomUserSerializer)
     def post(self, request, *args, **kwargs):
         # Pass the data to the serializer
         serializer = CustomUserSerializer(data=request.data)
@@ -48,15 +44,6 @@ class CreateUserView(APIView):
 
 class ListUsersView(APIView):
     permission_classes = [IsAdminUser]
-
-    @swagger_auto_schema(
-        operation_description="Retrieve a list of users.",
-        manual_parameters=[
-            openapi.Parameter('search', openapi.IN_QUERY, description="Search by email or username", type=openapi.TYPE_STRING),
-            openapi.Parameter('is_active', openapi.IN_QUERY, description="Filter by active status (true/false)", type=openapi.TYPE_BOOLEAN),
-            openapi.Parameter('role', openapi.IN_QUERY, description="Filter by role ID", type=openapi.TYPE_INTEGER)
-        ]
-    )
     def get(self, request, *args, **kwargs):
         search_query = request.query_params.get("search", None)
         is_active = request.query_params.get("is_active", None)
@@ -82,13 +69,23 @@ class ListUsersView(APIView):
 class UpdateUserView(APIView):
     permission_classes = [IsAdminUser]
 
-    @swagger_auto_schema(request_body=CustomUserSerializer)
+  
+    
     def put(self, request, id, *args, **kwargs):
-        user = get_user_or_404(id)
+        user = get_user_or_404(id)  # This function should fetch the user or return 404
         serializer = CustomUserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, id, *args, **kwargs):
+        user = get_user_or_404(id)
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)  # Use `partial=True` for partial updates
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class ActivationView(APIView):
 
     permission_classes = [IsAdminUser]
